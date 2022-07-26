@@ -199,7 +199,7 @@ function generateProps(verb) {
         responses
     }
 
-    if ((verb.type === 'post' || verb.type === 'put') && verb.body) {
+    if (verb.type === 'post' || verb.type === 'put') {
         pathItemObject[verb.type].requestBody = generateRequestBody(verb, verb.body)
     }
 
@@ -246,7 +246,8 @@ function generateRequestBody(verb, mixedBody) {
         }
     }
 
-    transferApidocParamsToSwaggerBody(mixedBody, bodyParameter.content)
+    if (mixedBody)
+        transferApidocParamsToSwaggerBody(mixedBody, bodyParameter.content)
 
     return bodyParameter
 }
