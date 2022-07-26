@@ -337,7 +337,7 @@ function safeParseJson(content) {
     try {
         json = JSON.parse(mayContentString)
     } catch (error) {
-        console.warn('parse error', error)
+        console.debug('JSON parse error', content)
     }
 
     return {
