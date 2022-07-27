@@ -24,9 +24,11 @@ function main(options) {
     options.verbose && console.log('options', options);
     const log = generateLog(options)
     apidoc_to_swagger.setLogger(log);
-    const { src, dest, verbose } = options
+    const apidocOptions = { ...options }
+    apidocOptions.dest = require('os').tmpdir() + '/oas3-tmp/'
+    fs.rmSync(apidocOptions.dest, { recursive: true, force: true }, log.debug);
 
-    var api = apidoc.createDoc({ ...options, dryRun: true });
+    var api = apidoc.createDoc(apidocOptions);
 
     var apidocData = JSON.parse(api.data);
     var projectData = JSON.parse(api.project);

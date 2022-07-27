@@ -134,6 +134,7 @@ function transferApidocParamsToSwaggerBody(apiDocParams, parameterInBody) {
     }
 
     apiDocParams.forEach(i => {
+        if (/(<p>)*\[\w+\[\w+/.test(i.description)) return; // handle api doc error for deep nested fields
         const type = i.type.toLowerCase()
         const key = i.field
         const nestedName = createNestedName(i.field, '')
@@ -199,7 +200,7 @@ function generateProps(verb) {
         responses
     }
 
-    if (verb.type === 'post' || verb.type === 'put') {
+    if (verb.type === 'post' || verb.type === 'put' || verb.type === 'patch') {
         pathItemObject[verb.type].requestBody = generateRequestBody(verb, verb.body)
     }
 
@@ -229,20 +230,25 @@ function generateRequestBody(verb, mixedBody) {
             'application/json': {
                 schema: {
                     properties: {},
-                    type: 'object',
-                    required: []
+                    type: 'object'
                 }
             }
         }
     }
 
     if (_.get(verb, 'parameter.examples.length') > 0) {
-        for (const example of verb.parameter.examples) {
+        bodyParameter.content['application/json'].examples = {};
+        for (let i = 0; i < verb.parameter.examples.length; i++) {
+            const example = verb.parameter.examples[i];
             const { code, json } = safeParseJson(example.content)
             const schema = GenerateSchema.json(example.title, json)
             delete schema.$schema;
             bodyParameter.content['application/json'].schema = schema
             bodyParameter.description = example.title
+            bodyParameter.content['application/json'].examples[i.toString()] = {
+                summary: example.title,
+                value: example.content
+            }
         }
     }
 
@@ -307,7 +313,7 @@ function mountResponseSpecSchema(verb, responses, code2XX) {
     // if (verb.success && verb.success['fields'] && verb.success['fields']['Success 200']) {
     if (_.get(verb, 'success.fields.Success ' + code2XX)) {
         const apidocParams = verb.success['fields']['Success ' + code2XX]
-        responses[code2XX] = transferApidocParamsToSwaggerBody(apidocParams, responses[code2XX].content)
+        responses[code2XX].content = transferApidocParamsToSwaggerBody(apidocParams, responses[code2XX].content)
     }
 }
 
